@@ -1,0 +1,6 @@
+python-telegram-bot==22.8
+pillow>=12.0
+rlottie-python==1.3.8
+
+# ffmpeg is a separate, non-pip dependency: it must be on PATH (or pointed at
+# with FFMPEG_BIN in .env) and built with libwebp_anim and a VP9 decoder.

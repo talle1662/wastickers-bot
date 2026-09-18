@@ -1,0 +1,23 @@
+# Credentials — a bot token is a full credential, never commit this
+.env
+
+# Personal sticker packs used while testing
+*.wastickers
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Virtualenvs
+venv/
+.venv/
+env/
+
+# Editors
+.idea/
+.vscode/
+*.swp
+.DS_Store
