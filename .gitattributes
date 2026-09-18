@@ -1,0 +1,9 @@
+# Shell scripts must keep LF or the shebang breaks on Linux and macOS.
+*.sh text eol=lf
+
+# Batch files are the opposite: cmd.exe wants CRLF.
+*.bat text eol=crlf
+
+*.png binary
+*.webp binary
+*.wastickers binary
