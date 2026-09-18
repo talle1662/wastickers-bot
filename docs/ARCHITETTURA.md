@@ -51,6 +51,8 @@ ogni bottone scarica poi soltanto i suoi 30 file.
 ## 3. Mappa dei moduli
 
 ```
+bot.bat / bot.sh        lanciatori che aprono la console di controllo
+console.py              supervisore: log dal vivo più /start, /stop, /status
 run.py                  entry point; la guardia __main__ conta su Windows
 src/
 ├─ main.py              wiring degli handler, timeout, process pool
@@ -275,6 +277,48 @@ Richiederebbe invece l'infrastruttura che il bot attuale evita di proposito:
 Da sapere inoltre: da una tastiera inline `WebApp.sendData()` non funziona, è
 riservata alle reply keyboard. La selezione deve tornare indietro con una POST
 autenticata verso il proprio backend.
+
+---
+
+## 11. La console di controllo
+
+`console.py` esegue il bot come processo figlio, riversa il suo output nella
+finestra e in `logs/bot.log`, e accetta `/start`, `/stop`, `/restart`, `/status`,
+`/logs`.
+
+Esiste perché fermare il bot non è semplicemente uccidere un processo: la
+conversione avviene in un pool di worker, e uccidere solo il padre può lasciarli
+orfani, con la memoria occupata e — peggio — una seconda istanza che poi entra in
+conflitto con la prima sullo stesso token. Quindi il figlio parte in un gruppo di
+processi suo (`CREATE_NEW_PROCESS_GROUP` su Windows, `start_new_session` altrove),
+gli si chiede di fermarsi con `CTRL_BREAK`/`SIGINT` così python-telegram-bot chiude
+in modo pulito, e infine si passa `taskkill /T` (o `SIGKILL` al gruppo) perché non
+sopravviva nulla.
+
+### Il figlio non deve ereditare lo stdin della console
+
+```python
+subprocess.Popen(..., stdin=subprocess.DEVNULL, stdout=subprocess.PIPE)
+```
+
+Questa riga regge tutto. Senza, l'output del bot supervisionato smette di arrivare
+nell'istante in cui il padre si blocca in lettura di un comando dal proprio stdin —
+e smette *del tutto*, prima ancora della prima riga di log, mentre il processo
+resta vivo e funzionante. Nessun errore, nessun codice di uscita: il pannello dei
+log resta semplicemente vuoto e il bot funziona benissimo, il che rende la causa
+difficilissima da indovinare partendo dal sintomo.
+
+È stata isolata per bisezione: un padre che dorme cattura l'output del figlio, un
+padre che legge stdin non cattura nulla, a parità di tutto il resto. Un processo in
+background supervisionato non ha comunque alcun motivo di leggere lo stdin della
+console, quindi reindirizzarlo sul dispositivo nullo è la forma giusta a
+prescindere dal meccanismo Windows sottostante.
+
+Nella stessa funzione c'è una seconda lezione, più piccola: il pump scrive ogni
+riga sul file di log *prima* di stamparla. La prima versione stampava per prima, e
+quando la stampa si bloccava restava vuoto anche il log su disco — l'unico
+artefatto che avrebbe potuto spiegare il guasto era proprio quello che il guasto
+distruggeva.
 
 ---
 

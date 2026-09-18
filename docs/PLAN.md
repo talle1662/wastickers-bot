@@ -424,3 +424,48 @@ L'immagine profilo e in `assets/profile.png` e va caricata a mano da @BotFather
 La console Windows usa cp1252 e solleva `UnicodeEncodeError` su qualunque emoji
 finita in un log. Gli sticker pack ne sono pieni, quindi `setup_logging`
 riconfigura ora stdout in UTF-8 con `errors="replace"`.
+
+---
+
+## 13. Rev. 5 — console di controllo
+
+Aggiunta `console.py` con i lanciatori `bot.bat` / `bot.sh`: una finestra che
+mostra i log dal vivo e accetta `/start`, `/stop`, `/restart`, `/status`, `/logs`,
+`/cls`, `/quit`.
+
+### 13.1 Perche un supervisore e non un semplice avvio
+
+La conversione gira in un pool di worker. Uccidere solo il processo padre li lascia
+orfani: memoria occupata e, soprattutto, il rischio che una seconda istanza entri
+in conflitto con la prima sullo stesso token. Il figlio parte quindi in un gruppo
+di processi dedicato, riceve CTRL_BREAK per chiudere in modo pulito, e viene poi
+spazzato con `taskkill /T`.
+
+### 13.2 Il bug che e costato piu tempo
+
+Il figlio ereditava lo stdin della console. Conseguenza: nell'istante in cui il
+thread principale si bloccava su `input()` per leggere un comando, l'output del bot
+smetteva di arrivare **del tutto** — nemmeno la prima riga, stampata prima di
+qualsiasi chiamata di rete — mentre il processo restava vivo e perfettamente
+funzionante. Nessuna eccezione, nessun codice di uscita.
+
+Isolato per bisezione, con un A/B a parita di tutto il resto:
+
+| padre | righe catturate |
+|---|---|
+| dorme, non legge stdin | 4 |
+| legge stdin | 0 |
+
+Correzione: `stdin=subprocess.DEVNULL` sul figlio.
+
+Due errori miei hanno reso la diagnosi piu lenta del necessario:
+
+1. il pump aveva un `except Exception: pass` che avrebbe nascosto qualunque errore
+   reale. Ora l'errore viene mostrato;
+2. il pump stampava la riga **prima** di scriverla su file, quindi quando la stampa
+   si bloccava restava vuoto anche il log su disco — l'unico artefatto che avrebbe
+   potuto spiegare il guasto. Ora si scrive prima su file.
+
+**Da ricordare**: un processo supervisionato non deve ereditare lo stdin di chi lo
+supervisiona, e un handler che ingoia le eccezioni in un percorso diagnostico e un
+bug travestito da robustezza.
