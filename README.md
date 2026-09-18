@@ -115,12 +115,33 @@ token is a full credential: anyone holding it controls the bot.
 
 ## Run
 
+The easiest way is the control console: double-click **`bot.bat`** on Windows, or
+run **`./bot.sh`** elsewhere. It opens a window that streams the bot's log and
+takes commands:
+
+```
+/start      start the bot
+/stop       stop it, together with its conversion workers
+/restart    restart it
+/status     state, PID, uptime
+/logs [n]   last n lines from logs/bot.log
+/cls        clear the window
+/help       this list
+/quit       stop the bot and exit
+```
+
+Output is mirrored to `logs/bot.log`, so you can read what happened while you were
+away. Closing the console stops the bot.
+
+To run it bare, without the supervisor:
+
 ```bash
 python run.py
 ```
 
-The bot runs for as long as that process lives. For an always-on setup use a
-systemd unit, a Windows scheduled task, or a process manager of your choice.
+Either way the bot lives only as long as its process, and only while the machine
+is on and online. For an always-on setup use a systemd unit, a Windows scheduled
+task, or a process manager.
 
 ## Usage
 

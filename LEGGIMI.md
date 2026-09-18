@@ -117,12 +117,33 @@ Telegram è una credenziale completa, chi ce l'ha controlla il bot.
 
 ## Avvio
 
+Il modo più comodo è la console di controllo: doppio clic su **`bot.bat`** su
+Windows, oppure **`./bot.sh`** altrove. Si apre una finestra che mostra i log dal
+vivo e accetta comandi:
+
+```
+/start      avvia il bot
+/stop       lo ferma, insieme ai worker di conversione
+/restart    lo riavvia
+/status     stato, PID, da quanto è attivo
+/logs [n]   ultime n righe da logs/bot.log
+/cls        pulisce la finestra
+/help       questo elenco
+/quit       ferma il bot ed esce
+```
+
+L'output finisce anche in `logs/bot.log`, così puoi leggere cosa è successo mentre
+non guardavi. Chiudendo la console il bot si ferma.
+
+Per avviarlo nudo, senza supervisore:
+
 ```bash
 python run.py
 ```
 
-Il bot resta attivo finché quel processo è vivo. Per tenerlo sempre acceso serve
-un servizio systemd, un'operazione pianificata di Windows, o un process manager.
+In entrambi i casi il bot vive quanto il suo processo, e solo se la macchina è
+accesa e connessa. Per tenerlo sempre attivo serve un servizio systemd,
+un'operazione pianificata di Windows, o un process manager.
 
 ## Uso
 

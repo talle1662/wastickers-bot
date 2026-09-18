@@ -50,6 +50,8 @@ fetches only its own 30 files.
 ## 3. Module map
 
 ```
+bot.bat / bot.sh        launchers that open the control console
+console.py              supervisor: live logs plus /start, /stop, /status
 run.py                  entry point; the __main__ guard matters on Windows
 src/
 ├─ main.py              handler wiring, timeouts, the process pool
@@ -266,6 +268,44 @@ What it *would* need is infrastructure the current bot deliberately avoids:
 Also worth knowing: from an inline keyboard, `WebApp.sendData()` does not work —
 it is reply-keyboard only. The selection has to come back by an authenticated POST
 to your own backend.
+
+---
+
+## 11. The control console
+
+`console.py` runs the bot as a child process, streams its output to the window and
+to `logs/bot.log`, and accepts `/start`, `/stop`, `/restart`, `/status`, `/logs`.
+
+It exists because stopping the bot is not simply killing one process: conversion
+happens in a pool of worker processes, and killing the parent alone can leave
+those orphaned, holding memory and — worse — a second instance can then collide
+with the first over the same bot token. So the child is started in its own process
+group (`CREATE_NEW_PROCESS_GROUP` on Windows, `start_new_session` elsewhere), asked
+to stop with `CTRL_BREAK`/`SIGINT` so python-telegram-bot can shut down cleanly,
+and then swept with `taskkill /T` (or `SIGKILL` to the group) so nothing survives.
+
+### The child must not inherit the console's stdin
+
+```python
+subprocess.Popen(..., stdin=subprocess.DEVNULL, stdout=subprocess.PIPE)
+```
+
+This one line is load-bearing. Without it, the supervised bot's output stops
+flowing the moment the parent blocks reading a command from its own stdin — and it
+stops *completely*, before the first log line, while the process stays alive and
+healthy. There is no error and no exit code: the log pane simply stays empty and
+the bot works fine, which makes the cause very hard to guess from the symptom.
+
+It was isolated by bisection: a parent that sleeps captures the child's output, a
+parent that reads stdin captures nothing, everything else being identical. A
+supervised background process has no business reading the console's stdin anyway,
+so redirecting it from the null device is the right shape regardless of the
+underlying Windows mechanism.
+
+A second, smaller lesson is in the same function: the pump writes each line to the
+log file *before* printing it. The first version printed first, so when printing
+stalled the disk log stayed empty too, and the one artefact that could have
+explained the failure was the one the failure destroyed.
 
 ---
 
