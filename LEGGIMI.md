@@ -88,7 +88,7 @@ prendi una build completa da [gyan.dev](https://www.gyan.dev/ffmpeg/builds/).
 ## Installazione
 
 ```bash
-git clone https://github.com/TUO-UTENTE/wastickers-bot.git
+git clone https://github.com/talle1662/wastickers-bot.git
 ```
 
 ```bash

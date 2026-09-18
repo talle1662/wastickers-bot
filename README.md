@@ -86,7 +86,7 @@ manager's `ffmpeg` with extra codecs.
 ## Install
 
 ```bash
-git clone https://github.com/YOUR-USERNAME/wastickers-bot.git
+git clone https://github.com/talle1662/wastickers-bot.git
 ```
 
 ```bash
