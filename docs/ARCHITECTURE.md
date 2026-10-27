@@ -195,12 +195,18 @@ Both animated paths share [`convert/fit.py`](../src/convert/fit.py). It retries
 with progressively worse settings until the output fits:
 
 ```
-(80, native) (70, native) (60, native)
-(65, 24) (55, 24) (50, 20) (45, 15) (40, 12) (30, 10)
-(25, 10) (20, 8) (15, 8)          ← only reachable with a lowered target
+(80, native, clean) (70, native, clean)
+(70, native, quant) (60, native, quant) (55, 24, quant) (50, 20, quant)
+(45, 15, quant) (40, 12, quant)
+(40, 12, binary) (30, 10, binary) (25, 10, binary) (20, 8, binary) (15, 8, binary)
 ```
 
-Quality is given up before smoothness, then both together. The 9.8-second cut and
+The third column is what happens to the alpha channel. WebP stores alpha
+losslessly, and the alpha decoded from Telegram's VP9 stickers is noisy: on a
+typical video sticker it was ~75% of the file, so lowering quality (which only
+touches colour) was not enough and many stickers were skipped. `clean` snaps
+near-0/near-255 noise (invisible), `quant` keeps 8 edge levels, `binary` makes
+edges hard. Alpha is simplified first, then quality, then smoothness. The 9.8-second cut and
 the 512×512 pad are applied on every attempt. If the last rung still does not fit,
 the sticker is reported as skipped rather than shipped oversized — an oversized
 sticker would fail the whole pack at import, so dropping one is the cheaper loss.

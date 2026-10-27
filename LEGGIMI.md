@@ -59,7 +59,7 @@ In tutti gli altri casi il risultato resta quello ingenuo.
   Ogni bottone scarica soltanto la propria fetta, quindi un singolo gruppo è
   rapido anche su un pacchetto da 300.
 - **Adattamento automatico del peso.** Tutto ciò che supera il limite di byte di
-  WhatsApp viene ricodificato scendendo una scala di qualità e frame rate finché
+  WhatsApp viene ricodificato scendendo una scala di trasparenza, qualità e frame rate finché
   non rientra.
 - **Gli sticker che non rientrano vengono scartati, non persi in silenzio**: il
   bot ti dice quanti e quali, con posizione ed emoji.

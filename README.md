@@ -57,7 +57,7 @@ Everything else keeps the plain greedy result.
   Each button downloads only its own slice, so a single batch is fast even on a
   300-sticker pack.
 - **Automatic size fitting.** Anything over WhatsApp's byte ceiling is re-encoded
-  down a quality/frame-rate ladder until it fits.
+  down a transparency/quality/frame-rate ladder until it fits.
 - **Stickers that cannot be made to fit are skipped, not silently dropped** — the
   bot tells you how many and which ones, by position and emoji.
 - **Live progress** on one edited message, throttled so it never trips the flood

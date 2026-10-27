@@ -200,12 +200,18 @@ Entrambi i percorsi animati condividono [`convert/fit.py`](../src/convert/fit.py
 che riprova con impostazioni via via peggiori finché l'output non rientra:
 
 ```
-(80, nativo) (70, nativo) (60, nativo)
-(65, 24) (55, 24) (50, 20) (45, 15) (40, 12) (30, 10)
-(25, 10) (20, 8) (15, 8)          ← raggiungibili solo con un target abbassato
+(80, nativo, clean) (70, nativo, clean)
+(70, nativo, quant) (60, nativo, quant) (55, 24, quant) (50, 20, quant)
+(45, 15, quant) (40, 12, quant)
+(40, 12, binary) (30, 10, binary) (25, 10, binary) (20, 8, binary) (15, 8, binary)
 ```
 
-Si sacrifica prima la qualità, poi la fluidità, poi entrambe. Il taglio a 9,8
+La terza colonna è il trattamento del canale alpha. WebP salva l'alpha senza
+perdita, e l'alpha decodificato dai VP9 di Telegram è rumoroso: su un tipico
+sticker video era circa il 75% del file, quindi abbassare la qualità (che tocca
+solo i colori) non bastava e molti sticker venivano scartati. `clean` azzera il
+rumore vicino a 0/255 (invisibile), `quant` tiene 8 livelli sui bordi, `binary`
+rende i bordi netti. Si semplifica prima l'alpha, poi la qualità, poi la fluidità. Il taglio a 9,8
 secondi e il pad a 512×512 vengono applicati a ogni tentativo. Se nemmeno l'ultimo
 gradino basta, lo sticker viene segnalato come scartato invece di essere spedito
 fuori misura: uno sticker sovradimensionato farebbe fallire l'intero pacchetto

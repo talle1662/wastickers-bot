@@ -14,24 +14,34 @@ from ..config import ANIM_MAX_SECONDS, FFMPEG, MAX_ANIMATED_BYTES, STICKER_SIZE
 
 MAX_FPS = 30
 
-# (quality, fps) attempts, best first. Quality is given up before smoothness,
-# then both together. `None` means "keep the source frame rate, capped at 30".
-LADDER: tuple[tuple[int, int | None], ...] = (
-    (80, None),
-    (70, None),
-    (60, None),
-    (65, 24),
-    (55, 24),
-    (50, 20),
-    (45, 15),
-    (40, 12),
-    (30, 10),
-    # The rungs below only come into play when the target is set well under
-    # WhatsApp's 500 KB, which is what happens while we bisect the pack-size
-    # limit. They are ugly on purpose: a rough sticker beats a skipped one.
-    (25, 10),
-    (20, 8),
-    (15, 8),
+# How the alpha channel is simplified before encoding. WebP stores alpha
+# losslessly, and the alpha decoded from Telegram's VP9 stickers is full of
+# near-0 and near-255 noise: on a typical video sticker it was ~75% of the file,
+# so lowering `quality` (which only touches colour) could not get it under the
+# limit. Measured on one sticker at q60: 499 KB raw, 371 KB CLEAN, 232 KB
+# QUANT, 158 KB BINARY.
+CLEAN = r"if(lt(val\,16)\,0\,if(gt(val\,239)\,255\,val))"  # snap the noise, invisible
+QUANT = r"if(lt(val\,16)\,0\,if(gt(val\,239)\,255\,floor(val/32)*32+16))"  # 8 edge levels
+BINARY = r"if(lt(val\,128)\,0\,255)"  # hard edges, last resort
+
+# (quality, fps, alpha) attempts, best first. Alpha is simplified before
+# quality is given up, then smoothness, then both together. `None` fps means
+# "keep the source frame rate, capped at 30".
+LADDER: tuple[tuple[int, int | None, str], ...] = (
+    (80, None, CLEAN),
+    (70, None, CLEAN),
+    (70, None, QUANT),
+    (60, None, QUANT),
+    (55, 24, QUANT),
+    (50, 20, QUANT),
+    (45, 15, QUANT),
+    (40, 12, QUANT),
+    (40, 12, BINARY),
+    (30, 10, BINARY),
+    # The rungs below are ugly on purpose: a rough sticker beats a skipped one.
+    (25, 10, BINARY),
+    (20, 8, BINARY),
+    (15, 8, BINARY),
 )
 
 
@@ -39,13 +49,14 @@ class EncodeError(RuntimeError):
     pass
 
 
-def _filters(fps: int | None, native_fps: float) -> str:
+def _filters(fps: int | None, native_fps: float, alpha: str) -> str:
     rate = min(fps or native_fps or MAX_FPS, MAX_FPS)
     return (
         f"fps={rate:g},"
         f"scale={STICKER_SIZE}:{STICKER_SIZE}:force_original_aspect_ratio=decrease,"
         f"format=rgba,"
-        f"pad={STICKER_SIZE}:{STICKER_SIZE}:-1:-1:color=#00000000"
+        f"pad={STICKER_SIZE}:{STICKER_SIZE}:-1:-1:color=#00000000,"
+        f"lutrgb=a='{alpha}'"
     )
 
 
@@ -62,11 +73,11 @@ def encode_animated(
     last_size = 0
     last_error = ""
 
-    for quality, fps in LADDER:
+    for quality, fps, alpha in LADDER:
         cmd = [
             FFMPEG, "-y", "-hide_banner", "-loglevel", "error",
             *input_args,
-            "-vf", _filters(fps, native_fps),
+            "-vf", _filters(fps, native_fps, alpha),
             "-t", str(ANIM_MAX_SECONDS),   # hard 10 s cap, applied every time
             "-an",
             "-c:v", "libwebp_anim",
