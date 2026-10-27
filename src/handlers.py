@@ -18,7 +18,7 @@ from .config import (
     CLEAR_SWEEP_DEPTH,
     MIN_PER_PACK,
     PACK_AUTHOR,
-    PACK_TITLE_BASE,
+    PACK_TITLE_FORMAT,
     PROGRESS_THROTTLE_S,
     UPLOAD_READ_TIMEOUT,
     UPLOAD_WRITE_TIMEOUT,
@@ -28,7 +28,7 @@ from .jobs import Family, Job, JobStore, build_job
 from .keyboard import CONVERT_ALL, batch_key, build_header, build_keyboard
 from .packer import write_wastickers
 from .telegram_fetch import download_all, load_pack
-from .util import sanitize_filename, short_title
+from .util import sanitize_filename
 
 log = logging.getLogger(__name__)
 
@@ -156,8 +156,13 @@ def _nature(family: Family) -> str:
 
 
 def _compose_title(job: Job, family: Family, index: int) -> str:
-    """A short title for WhatsApp, e.g. "Er budello de anim 2"."""
-    parts = [short_title(job.title, PACK_TITLE_BASE)]
+    """A short title for WhatsApp, e.g. "Pack 27-10 12.30 anim 2".
+
+    The original Telegram title is deliberately not used: it is often long,
+    full of @handles or in another alphabet, and the creation time is enough
+    to tell packs apart.
+    """
+    parts = [time.strftime(PACK_TITLE_FORMAT)]
     if len(job.families) > 1:
         parts.append(texts.SHORT_ANIMATED if family.key == "a" else texts.SHORT_STATIC)
     if len(family.batches) > 1:

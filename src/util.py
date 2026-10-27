@@ -37,18 +37,6 @@ def sanitize_filename(name: str, fallback: str = "stickers") -> str:
     return cleaned[:60] or fallback
 
 
-_HANDLE = re.compile(r"(\bby\s+)?@\w+|::|\|", re.IGNORECASE)
-
-
-def short_title(name: str, limit: int) -> str:
-    """Drop @handles and separators ("X :: @fStikBot"), then cut at a word boundary."""
-    cleaned = re.sub(r"\s+", " ", _HANDLE.sub(" ", name)).strip(" -_.")
-    if len(cleaned) > limit:
-        cut = cleaned[:limit]
-        cleaned = (cut.rsplit(" ", 1)[0] if " " in cut else cut).rstrip(" -_.")
-    return cleaned or "Stickers"
-
-
 def truncate(text: str, limit: int) -> str:
     """Clip to `limit` characters, used for title.txt / author.txt (128 max)."""
     return text if len(text) <= limit else text[: limit - 1].rstrip() + "…"
