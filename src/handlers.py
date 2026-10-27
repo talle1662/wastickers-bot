@@ -225,7 +225,8 @@ async def _run_batch(
             return skipped
 
         filename = (
-            f"{sanitize_filename(job.title)}_{_nature(family)}"
+            # set_name is always ASCII, so it stands in for a non-Latin title.
+            f"{sanitize_filename(job.title, fallback=job.set_name)}_{_nature(family)}"
             f"_{index + 1}di{len(family.batches)}.wastickers"
         )
         archive = Path(workdir) / filename

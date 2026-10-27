@@ -6,7 +6,10 @@ import logging
 import re
 import sys
 
-_UNSAFE = re.compile(r"[^\w\-. ]+", re.UNICODE)
+# ASCII only: a document name with Cyrillic in it reaches the phone as
+# "..._wastickers", with the extension's dot gone, and Sticker Maker then
+# refuses to import it.
+_UNSAFE = re.compile(r"[^A-Za-z0-9_\-. ]+")
 
 
 def setup_logging(level: int = logging.INFO) -> None:
