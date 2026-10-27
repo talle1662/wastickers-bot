@@ -29,7 +29,8 @@ def _load_dotenv() -> None:
 _load_dotenv()
 
 BOT_TOKEN = os.environ.get("BOT_TOKEN", "").strip()
-BOT_USERNAME_FALLBACK = "@WhatsAppStickerConverterBot"
+PACK_AUTHOR = "ConvertitorePack"  # author.txt of every pack, whatever the bot is called
+PACK_TITLE_BASE = 20  # characters kept from the Telegram title, before the suffix
 FFMPEG = os.environ.get("FFMPEG_BIN", "ffmpeg")
 
 # --- WhatsApp / Sticker Maker limits -------------------------------------

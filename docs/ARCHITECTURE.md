@@ -133,8 +133,8 @@ tray.png               PNG, exactly 96×96, ≤50 000 bytes
 
 Observations that are easy to get wrong:
 
-- **`author.txt` holds the converter bot's own handle**, not the original pack
-  author. That is what Sticker Maker's own exports contain.
+- **`author.txt` is always `ConvertitorePack`** (`PACK_AUTHOR` in config), not the
+  original pack author nor the bot's current handle.
 - **The sticker prefix is the pack's creation timestamp.** When one Telegram pack
   is split into several files generated in the same second, each file needs a
   *distinct* prefix or two packs end up carrying identical sticker names.

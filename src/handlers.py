@@ -14,10 +14,11 @@ from telegram.ext import ContextTypes
 
 from . import texts
 from .config import (
-    BOT_USERNAME_FALLBACK,
     CLEAR_CHUNK,
     CLEAR_SWEEP_DEPTH,
     MIN_PER_PACK,
+    PACK_AUTHOR,
+    PACK_TITLE_BASE,
     PROGRESS_THROTTLE_S,
     UPLOAD_READ_TIMEOUT,
     UPLOAD_WRITE_TIMEOUT,
@@ -27,7 +28,7 @@ from .jobs import Family, Job, JobStore, build_job
 from .keyboard import CONVERT_ALL, batch_key, build_header, build_keyboard
 from .packer import write_wastickers
 from .telegram_fetch import download_all, load_pack
-from .util import sanitize_filename
+from .util import sanitize_filename, short_title
 
 log = logging.getLogger(__name__)
 
@@ -155,12 +156,14 @@ def _nature(family: Family) -> str:
 
 
 def _compose_title(job: Job, family: Family, index: int) -> str:
-    parts = []
+    """A short title for WhatsApp, e.g. "Er budello de anim 2"."""
+    parts = [short_title(job.title, PACK_TITLE_BASE)]
     if len(job.families) > 1:
-        parts.append(_nature(family))
+        parts.append(texts.SHORT_ANIMATED if family.key == "a" else texts.SHORT_STATIC)
     if len(family.batches) > 1:
-        parts.append(f"{index + 1}/{len(family.batches)}")
-    return f"{job.title} ({' '.join(parts)})" if parts else job.title
+        # No "/" here: importers may use the title as a path component.
+        parts.append(str(index + 1))
+    return " ".join(parts)
 
 
 async def _run_batch(
@@ -174,7 +177,6 @@ async def _run_batch(
 ) -> list[str]:
     """Convert and send one batch. Returns the list of skipped sticker labels."""
     refs = family.batches[index]
-    author = context.bot_data.get("author", BOT_USERNAME_FALLBACK)
     executor = context.bot_data["executor"]
     loop = asyncio.get_running_loop()
 
@@ -230,8 +232,12 @@ async def _run_batch(
         title = _compose_title(job, family, index)
 
         progress.update(texts.BUILDING.format(tag=tag, filename=filename))
+        # The prefix must stay a plain 10-digit unix timestamp, exactly like the
+        # reference pack. Appending the step made it 12 digits, which overflows
+        # a 32-bit int and made every pack fail to import. Offsetting by `step`
+        # keeps the files of one run distinct without changing the shape.
         write_wastickers(
-            archive, title, author, good, prefix=f"{int(time.time())}{step:02d}"
+            archive, title, PACK_AUTHOR, good, prefix=str(int(time.time()) + step)
         )
 
         caption = [texts.CAPTION.format(title=title, n=len(good))]

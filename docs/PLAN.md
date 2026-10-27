@@ -110,7 +110,8 @@ sono definitivamente perse. Limite del formato, non del bot.
 
 **Prefisso per i file multipli**: uno split produce più `.wastickers` nello stesso istante.
 Per evitare collisioni di identità tra pack, ogni file riceve un prefisso distinto
-(`<ts><batch_idx>`), non lo stesso timestamp ripetuto.
+(`<ts + batch_idx>`, sempre 10 cifre), non lo stesso timestamp ripetuto. **Non** concatenare
+l'indice al timestamp: 12 cifre superano un int a 32 bit e il pack non si importa più.
 
 ---
 

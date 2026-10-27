@@ -135,8 +135,8 @@ tray.png               PNG, esattamente 96×96, max 50 000 byte
 
 Dettagli facili da sbagliare:
 
-- **`author.txt` contiene lo username del bot convertitore**, non l'autore del
-  pacchetto originale. È ciò che contengono gli export di Sticker Maker.
+- **`author.txt` vale sempre `ConvertitorePack`** (`PACK_AUTHOR` in config), non
+  l'autore del pacchetto originale né lo username attuale del bot.
 - **Il prefisso degli sticker è il timestamp di creazione.** Quando un pacchetto
   Telegram viene diviso in più file generati nello stesso secondo, ogni file
   richiede un prefisso *distinto*, altrimenti due pacchetti finiscono per avere

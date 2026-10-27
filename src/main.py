@@ -31,9 +31,7 @@ log = logging.getLogger(__name__)
 
 
 async def _post_init(app: Application) -> None:
-    """author.txt carries the converter bot's own handle, matching the reference pack."""
     me = await app.bot.get_me()
-    app.bot_data["author"] = f"@{me.username}"
     log.info("running as @%s", me.username)
 
     await app.bot.set_my_commands(

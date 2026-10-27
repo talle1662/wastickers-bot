@@ -56,6 +56,9 @@ UPLOADING = "{tag}Carico {filename}…"
 
 NATURE_STATIC = "statici"
 NATURE_ANIMATED = "animati"
+# Same, abbreviated for the pack title shown inside WhatsApp.
+SHORT_STATIC = "stat"
+SHORT_ANIMATED = "anim"
 
 CAPTION = "{title} — {n} sticker"
 CAPTION_SKIPPED = "{n} scartati: {which}"
